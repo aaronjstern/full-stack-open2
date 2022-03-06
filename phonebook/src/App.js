@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import "./index.css";
 import nameService from "./services/entries";
 
 const Filter = ({ searchEntries }) => {
@@ -41,12 +42,21 @@ const Entry = ({ person, deleteName }) => {
   );
 };
 
+const Notification = ({ message, type }) => {
+  if (message === null) {
+    return null;
+  }
+  return <div className={type}> {message}</div>;
+};
+
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filterOn, setFilterOn] = useState(false);
   const [filterTerm, setFilterTerm] = useState("");
+  const [addMessage, setAddMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     nameService.getAll().then((allNames) => {
@@ -88,6 +98,10 @@ const App = () => {
         setNewName("");
         setNewNumber("");
       });
+      setAddMessage(`Added ${nameObject.name}`);
+      setTimeout(() => {
+        setAddMessage(null);
+      }, 5000);
     }
   };
 
@@ -117,7 +131,14 @@ const App = () => {
   const toDeleteName = (id) => {
     const person = persons.find((p) => p.id === id);
     if (window.confirm(`Delete ${person.name}?`)) {
-      nameService.destroy(id);
+      nameService.destroy(id).catch((error) => {
+        setErrorMessage(
+          `Information of ${person.name} already deleted from server`
+        );
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 5000);
+      });
       setPersons(persons.filter((p) => p.id !== id));
     }
   };
@@ -125,6 +146,8 @@ const App = () => {
   return (
     <div>
       <h1>Phonebook</h1>
+      <Notification message={addMessage} type="addNotification" />
+      <Notification message={errorMessage} type="errorNotification" />
       <Filter searchEntries={searchEntries} />
       <h2>Add New Entry</h2>
       <PersonForm
