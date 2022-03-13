@@ -73,12 +73,11 @@ const App = () => {
         )
       ) {
         const person = persons.find((p) => p.name === newName);
-        const url = `http://localhost:3001/persons/${person.id}`;
         const changedPerson = { ...person, number: newNumber };
-        axios.put(url, changedPerson).then((response) => {
+        nameService.update(person.id, changedPerson).then((changedEntry) => {
           setPersons(
             persons.map((person) =>
-              person.name !== newName ? person : response.data
+              person.name !== newName ? person : changedEntry
             )
           );
         });
@@ -131,14 +130,16 @@ const App = () => {
   const toDeleteName = (id) => {
     const person = persons.find((p) => p.id === id);
     if (window.confirm(`Delete ${person.name}?`)) {
-      nameService.destroy(id).catch((error) => {
+      try {
+        nameService.destroy(id);
+      } catch {
         setErrorMessage(
           `Information of ${person.name} already deleted from server`
         );
         setTimeout(() => {
           setErrorMessage(null);
         }, 5000);
-      });
+      }
       setPersons(persons.filter((p) => p.id !== id));
     }
   };
